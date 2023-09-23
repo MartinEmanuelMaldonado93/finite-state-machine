@@ -412,7 +412,7 @@ class BasicCharacterController {
 		this._params = params;
 
 		this._decceleration = new Vector3(-0.0005, -0.0001, -5.0);
-		this._acceleration = new Vector3(1, 0.25, 50.0);
+		this._acceleration = new Vector3(1, 0.25, 25.0);
 		this._velocity = new Vector3(0, 0, 0);
 
 		this._input = new ControllerInput();
