@@ -1,0 +1,11 @@
+Model Information:
+* title:	Homer Simpson 3D Model
+* source:	https://sketchfab.com/3d-models/homer-simpson-3d-model-fb704674562c49879c785783c7eac3e3
+* author:	TheRealKrusty (https://sketchfab.com/TheRealKrusty)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Homer Simpson 3D Model" (https://sketchfab.com/3d-models/homer-simpson-3d-model-fb704674562c49879c785783c7eac3e3) by TheRealKrusty (https://sketchfab.com/TheRealKrusty) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

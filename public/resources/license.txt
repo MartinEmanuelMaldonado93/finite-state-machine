@@ -1,0 +1,11 @@
+Model Information:
+* title:	Homer
+* source:	https://sketchfab.com/3d-models/homer-0d9ff854451645129d8c872a897bd02d
+* author:	wombleoni (https://sketchfab.com/wombleoni)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Homer" (https://sketchfab.com/3d-models/homer-0d9ff854451645129d8c872a897bd02d) by wombleoni (https://sketchfab.com/wombleoni) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
