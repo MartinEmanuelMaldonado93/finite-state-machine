@@ -1,31 +1,40 @@
 import type {
-	AnimationAction,
-	AnimationClip,
-	Camera,
-	Group,
-	Object3DEventMap,
+  AnimationAction,
+  AnimationClip,
+  Camera,
+  Group,
+  Object3DEventMap,
 } from "three";
 import {
-	AmbientLight,
-	AnimationMixer,
-	Color,
-	DirectionalLight,
-	LoadingManager,
-	LoopOnce,
-	Mesh,
-	MeshStandardMaterial,
-	PCFSoftShadowMap,
-	PerspectiveCamera,
-	PlaneGeometry,
-	Quaternion,
-	SRGBColorSpace,
-	Scene,
-	Vector3,
-	WebGLRenderer,
+  AmbientLight,
+  AnimationMixer,
+  Color,
+  DirectionalLight,
+  Fog,
+  GridHelper,
+  LoadingManager,
+  LoopOnce,
+  PCFSoftShadowMap,
+  PerspectiveCamera,
+  Quaternion,
+  SRGBColorSpace,
+  Scene,
+  Vector3,
+  WebGLRenderer,
 } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+
+import { getProject } from "@theatre/core";
+import studio from "@theatre/studio";
+
+if (import.meta.env.DEV) {
+	studio.initialize();
+	const project = getProject("THREE.js x Theatre.js");
+	// Create a sheet
+	const sheet = project.sheet("Animated scene");
+}
 
 type STATES = "idle" | "walking" | "run" | "dance" | "jump";
 type parent = CharacterFSM | FiniteStateMachine | null;
@@ -84,8 +93,6 @@ class ControllerInput {
 		document.addEventListener("keyup", (e) => this._onKeyUp(e), false);
 	}
 	private _onKeyDown(event: KeyboardEvent) {
-		// console.log(event.code);
-		// console.log(event.key);
 		switch (event.key.toLocaleLowerCase()) {
 			case "w": // w
 				this.keys.forward = true;
@@ -125,7 +132,6 @@ class ControllerInput {
 				this.keys.space = false;
 				break;
 			case "shift": // SHIFT
-				console.log("shift");
 				this.keys.shift = false;
 				break;
 		}
@@ -175,10 +181,7 @@ class CharacterFSM extends FiniteStateMachine {
 	constructor(proxy: ControllerProxy) {
 		super();
 		this._proxy = proxy;
-		this._Init();
-	}
 
-	_Init() {
 		//@ts-ignore
 		this._AddState("idle", IdleState);
 		//@ts-ignore
@@ -201,15 +204,15 @@ class IdleState extends State {
 	Enter(prevState: State) {
 		if (!this._parent) throw new Error(" PARENT NULL");
 
-		const proxy = (this._parent as CharacterFSM)._proxy;
-		const idleAction = proxy._animations["idle"].action;
+		const { _proxy } = this._parent as CharacterFSM;
+		const idleAction = _proxy._animations["idle"].action;
 
 		if (!prevState) {
-			idleAction.play();
+      idleAction.play();
 			return;
 		}
 		// if has a previous state we want to make a smooth transition
-		const prevAction = proxy._animations[prevState.Name!].action;
+		const prevAction = _proxy._animations[prevState.Name!].action;
 		idleAction.time = 0.0;
 		idleAction.enabled = true;
 		idleAction.setEffectiveTimeScale(1.0);
@@ -256,19 +259,21 @@ class RunState extends State {
 				const ratio =
 					curAction.getClip().duration / prevAction.getClip().duration;
 				curAction.time = prevAction.time * ratio;
+				// ✅
 			} else {
 				curAction.time = 0.0;
 				curAction.setEffectiveTimeScale(1.0);
 				curAction.setEffectiveWeight(1.0);
 			}
-
-			curAction.crossFadeFrom(prevAction, 0.1, true);
+			curAction.crossFadeFrom(prevAction, 0.2, true);
+			// curAction.clampWhenFinished = true;
+			console.count("running...");
 			curAction.play();
 		} else {
-			curAction.play();
+			curAction.play(); // doesnt enter
 		}
 	}
-	// updates to walking or idle
+	// Set State updates to walking or idle
 	Update(timeElapsed: number, input: ControllerInput) {
 		if (!this._parent) throw new Error("this parent is null");
 
@@ -281,7 +286,11 @@ class RunState extends State {
 
 		this._parent.SetState("idle");
 	}
-	Exit() {}
+	Exit() {
+		const { _proxy } = this._parent as CharacterFSM;
+		const curAction = _proxy.animations[this.Name].action;
+		// curAction.
+	}
 }
 class WalkState extends State {
 	constructor(parent: parent) {
@@ -295,10 +304,11 @@ class WalkState extends State {
 	Enter(prevState: State) {
 		if (!this._parent) throw new Error(" PARENT NULL");
 
-		const proxy = (this._parent as CharacterFSM)._proxy;
-		const curAction = proxy._animations["walking"].action;
+		const { _proxy } = this._parent as CharacterFSM;
+		const curAction = _proxy._animations["walking"].action;
+
 		if (prevState) {
-			const prevAction = proxy._animations[prevState.Name!].action;
+			const prevAction = _proxy._animations[prevState.Name!].action;
 
 			curAction.enabled = true;
 
@@ -315,7 +325,7 @@ class WalkState extends State {
 			curAction.crossFadeFrom(prevAction, 0.5, true);
 			curAction.play();
 		} else {
-			curAction.play();
+			curAction.play(); // doesn't enter
 		}
 	}
 	Update(timeElapsed: number, input: ControllerInput) {
@@ -323,7 +333,6 @@ class WalkState extends State {
 
 		if (input.keys.forward || input.keys.backward) {
 			if (input.keys.shift) {
-				console.log("run shift walk state");
 				this._parent.SetState("run");
 			}
 			return;
@@ -331,7 +340,13 @@ class WalkState extends State {
 
 		this._parent.SetState("idle");
 	}
-	Exit() {}
+	Exit() {
+		// console.log('exit !');
+		// const proxy = (this._parent as CharacterFSM)._proxy;
+		// const curAction = proxy._animations["walking"].action;
+		// // current.fadeOut(FADE_DURATION); // off
+		// curAction.reset().fadeIn(0.2).play();
+	}
 }
 class DanceState extends State {
 	private _FinishedCallback: () => void;
@@ -639,23 +654,14 @@ export class WorldWithCharacter {
 		// texture.encoding = THREE.sRGBEncoding;
 		// this._scene.background = texture;
 		this._scene.background = new Color("#000000");
-
-		const plane = new Mesh(
-			new PlaneGeometry(50, 50, 10, 10),
-			new MeshStandardMaterial({
-				color: 0x808080,
-			})
-		);
-		plane.castShadow = false;
-		plane.receiveShadow = true;
-		plane.rotation.x = -Math.PI / 2;
-		this._scene.add(plane);
+		this._scene.fog = new Fog("black", 6, 30);
+		this._scene.add(new GridHelper(40, 40, undefined, "green"));
 
 		this._mixers = [];
 		this._previousRAF = null;
 
 		this._LoadAnimatedModel();
-		// this._LoadAnimatedModelAndPlay();
+
 		this._RAF();
 	}
 
